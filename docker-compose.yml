@@ -1,0 +1,51 @@
+version: "3"
+services:
+  sql:
+    image: broderickhyman/albiondata-sql:latest
+    build: 
+      context: .
+      args:
+        project: albiondata-sql-dotNet
+    restart: on-failure
+    command: "-n nats://nats:4222 -s 'server=mysql;port=3306;database=albion;user=root;password=example' -d"
+  api:
+    image: broderickhyman/albiondata-api:latest
+    build:
+      context: .
+      args:
+        project: albiondata-api-dotNet
+        runtime: aspnet
+    restart: on-failure
+    ports:
+      - 8056:80
+    command: "-s 'server=mysql;port=3306;database=albion;user=root;password=example' -d"
+  deduper:
+    image: broderickhyman/albiondata-deduper:latest
+    build:
+      context: .
+      args:
+        project: albiondata-deduper-dotNet
+    restart: on-failure
+    command: "-o nats://nats:4222 -n 'nats://nats:4222' -r 'redis:6379' -d"
+  nats:
+    image: nats
+    ports:
+      - 4222:4222
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql:/var/lib/mysql
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    command: redis-server --appendonly yes
+volumes:
+  redis:
+  mysql:
