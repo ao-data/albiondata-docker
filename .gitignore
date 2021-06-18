@@ -1,0 +1,3 @@
+mysqldata/*
+redisdata/*
+.env

@@ -19,6 +19,20 @@ services:
       - mysql
     networks: 
       - albiondata
+  gate:
+    image: albiondata/gate:latest
+    restart: on-failure
+    environment:
+      ENABLE_NATS: 1
+      NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
+      POW_DIFFICULITY: 39
+      POW_PORT: 4223      
+    ports:
+      - 4223:4223
+    depends_on: 
+      - nats
+    networks: 
+      - albiondata
   deduper:
     image: albiondata/deduper:latest
     restart: on-failure
@@ -38,13 +52,13 @@ services:
     networks: 
       - albiondata
   mysql:
-    image: mysql
+    image: mariadb:10.5.10
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PWD}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_PWD}
     ports:
       - 3306:3306
     volumes:
-      - mysql:/var/lib/mysql
+      - ./mysqldata:/var/lib/mysql
     networks: 
       - albiondata
   redis:
@@ -52,12 +66,9 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - redis:/data
+      - ./redisdata:/data
     command: redis-server --appendonly yes
     networks: 
       - albiondata
-volumes:
-  redis:
-  mysql:
 networks:
   albiondata:
