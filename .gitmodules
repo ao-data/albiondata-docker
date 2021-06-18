@@ -1,9 +1,0 @@
-[submodule "albiondata-api-dotNet"]
-	path = albiondata-api-dotNet
-	url = https://github.com/broderickhyman/albiondata-api-dotNet
-[submodule "albiondata-deduper-dotNet"]
-	path = albiondata-deduper-dotNet
-	url = https://github.com/broderickhyman/albiondata-deduper-dotNet
-[submodule "albiondata-sql-dotNet"]
-	path = albiondata-sql-dotNet
-	url = https://github.com/broderickhyman/albiondata-sql-dotNet
