@@ -1,44 +1,52 @@
 version: "3"
 services:
   sql:
-    image: broderickhyman/albiondata-sql:latest
-    build: 
-      context: .
-      args:
-        project: albiondata-sql-dotNet
+    image: albiondata/sql:latest
     restart: on-failure
-    command: "-n nats://nats:4222 -s 'server=mysql;port=3306;database=albion;user=root;password=example' -d"
+    command: "-n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
+    depends_on: 
+      - mysql
+      - nats
+    networks: 
+      - albiondata
   api:
-    image: broderickhyman/albiondata-api:latest
-    build:
-      context: .
-      args:
-        project: albiondata-api-dotNet
-        runtime: aspnet
+    image: albiondata/api:latest
     restart: on-failure
+    command: "-s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
     ports:
       - 8056:80
-    command: "-s 'server=mysql;port=3306;database=albion;user=root;password=example' -d"
+    depends_on: 
+      - mysql
+    networks: 
+      - albiondata
   deduper:
-    image: broderickhyman/albiondata-deduper:latest
-    build:
-      context: .
-      args:
-        project: albiondata-deduper-dotNet
+    image: albiondata/deduper:latest
     restart: on-failure
-    command: "-o nats://nats:4222 -n 'nats://nats:4222' -r 'redis:6379' -d"
+    command: "-o nats://${NATS_USER}:${NATS_PWD}@nats:4222 -n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -r 'redis:6379' -d"
+    depends_on: 
+      - nats
+      - redis
+    networks: 
+      - albiondata
   nats:
     image: nats
     ports:
       - 4222:4222
+      - 6222:6222
+      - 8222:8222
+    command: "--user ${NATS_USER} --pass ${NATS_PWD}"
+    networks: 
+      - albiondata
   mysql:
     image: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PWD}
     ports:
       - 3306:3306
     volumes:
       - mysql:/var/lib/mysql
+    networks: 
+      - albiondata
   redis:
     image: redis
     ports:
@@ -46,6 +54,10 @@ services:
     volumes:
       - redis:/data
     command: redis-server --appendonly yes
+    networks: 
+      - albiondata
 volumes:
   redis:
   mysql:
+networks:
+  albiondata:
