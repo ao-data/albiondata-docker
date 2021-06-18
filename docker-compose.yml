@@ -25,7 +25,7 @@ services:
     environment:
       ENABLE_NATS: 1
       NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
-      POW_DIFFICULITY: 39
+      POW_DIFFICULITY: 37
       POW_PORT: 4223      
     ports:
       - 4223:4223
@@ -70,5 +70,40 @@ services:
     command: redis-server --appendonly yes
     networks: 
       - albiondata
+  proxy:
+    image: jc21/nginx-proxy-manager:latest
+    restart: always
+    environment:
+      X_FRAME_OPTIONS: "sameorigin"
+      DB_SQLITE_FILE: "/data/database.sqlite"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - ./nginx_proxy_manager/data:/data
+      - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
+    networks: 
+      - albiondata
+  nginx:
+    image: jc21/nginx-proxy-manager:latest
+    restart: always
+    environment:
+      - X_FRAME_OPTIONS="sameorigin"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - ./nginx_proxy_manager/data:/data
+      - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
+    networks: 
+      - albiondata
+  nginx:
+    image: nginx
+    volumes:
+      - "$PWD/web:/usr/share/nginx/html:ro"
+    ports:
+      - 8080:80        
 networks:
   albiondata:
