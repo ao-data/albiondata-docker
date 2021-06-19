@@ -44,11 +44,16 @@ services:
       - albiondata
   nats:
     image: nats
+    environment:
+      NATS_USER: ${NATS_USER}
+      NATS_PWD: ${NATS_PWD}
     ports:
       - 4222:4222
       - 6222:6222
       - 8222:8222
-    command: "--user ${NATS_USER} --pass ${NATS_PWD}"
+    volumes:
+      - ./nats/nats-server.conf:/etc/nats/nats-server.conf
+    command: "-c /etc/nats/nats-server.conf"
     networks: 
       - albiondata
   mysql:
