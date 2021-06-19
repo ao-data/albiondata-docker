@@ -25,8 +25,8 @@ services:
     environment:
       ENABLE_NATS: 1
       NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
-      POW_DIFFICULITY: 37
-      POW_PORT: 4223      
+      POW_DIFFICULITY: ${POW_DIFFICULITY:-35}
+      POW_PORT: ${POW_PORT:-4223}      
     ports:
       - 4223:4223
     depends_on: 
@@ -59,6 +59,7 @@ services:
       - 3306:3306
     volumes:
       - ./mysqldata:/var/lib/mysql
+      - ./mysqlconfig/70-server.cnf:/etc/mysql/mariadb.conf.d/70-server.cnf
     networks: 
       - albiondata
   redis:
