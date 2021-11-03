@@ -3,3 +3,4 @@ key_buffer_size = 1G
 innodb_buffer_pool_size = 4G
 innodb_adaptive_hash_index = ON
 event_scheduler=1
+innodb_buffer_pool_instances = 4
