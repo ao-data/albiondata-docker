@@ -78,7 +78,9 @@ services:
       DB_DUMP_FREQ: 1440 # Once a day
       DB_DUMP_BEGIN: 0100 # 01:00am
       DB_DUMP_TARGET: /db
-      MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table --replace"
+      # We are skipping the drops so we don't accidentally kill someone's DB
+      # They will need to drop the database/tables manually in order to use the script
+      MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table"
       # DB_DUMP_DEBUG: true
     volumes:
       - "./web/database:/db"
