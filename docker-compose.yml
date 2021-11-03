@@ -109,6 +109,8 @@ services:
     image: nginx
     volumes:
       - "$PWD/web:/usr/share/nginx/html:ro"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
     ports:
       - 8080:80        
 networks:
