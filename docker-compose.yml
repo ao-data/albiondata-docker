@@ -67,6 +67,28 @@ services:
       - ./mysqlconfig/70-server.cnf:/etc/mysql/mariadb.conf.d/70-server.cnf
     networks: 
       - albiondata
+  mysql-backup:
+    image: databack/mysql-backup:latest
+    environment:
+      DB_SERVER: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PWD}
+      DB_NAMES: ${MYSQL_DB}
+      DB_DUMP_FREQ: 1440 # Once a day
+      DB_DUMP_BEGIN: 0100 # 01:00am
+      DB_DUMP_TARGET: /db
+      # We are skipping the drops so we don't accidentally kill someone's DB
+      # They will need to drop the database/tables manually in order to use the script
+      MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table"
+      # DB_DUMP_DEBUG: true
+    volumes:
+      - "./web/database:/db"
+      - "./mysql-backup:/scripts.d"
+    depends_on: 
+      - mysql
+    networks: 
+    - albiondata
   redis:
     image: redis
     ports:
@@ -109,6 +131,8 @@ services:
     image: nginx
     volumes:
       - "$PWD/web:/usr/share/nginx/html:ro"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
     ports:
       - 8080:80        
 networks:

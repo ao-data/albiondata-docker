@@ -1,6 +1,5 @@
 mysqldata/*
 redisdata/*
 .env
-nginx/*
 nginx_proxy_manager/*
 web/*
