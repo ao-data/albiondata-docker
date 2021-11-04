@@ -69,6 +69,7 @@ services:
       - albiondata
   mysql-backup:
     image: databack/mysql-backup:latest
+    user: "0"
     environment:
       DB_SERVER: mysql
       DB_PORT: 3306
