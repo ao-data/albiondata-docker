@@ -27,10 +27,15 @@ services:
       NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
       POW_DIFFICULITY: ${POW_DIFFICULITY:-35}
       POW_PORT: ${POW_PORT:-4223}      
+      POW_EXPIRE_SECONDS: 300
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-2}
     ports:
       - 4223:4223
     depends_on: 
       - nats
+      - redis
     networks: 
       - albiondata
   deduper:
