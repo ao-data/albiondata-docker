@@ -49,6 +49,7 @@ services:
       - albiondata
   nats:
     image: nats
+    restart: on-failure
     environment:
       NATS_USER: ${NATS_USER}
       NATS_PWD: ${NATS_PWD}
@@ -63,6 +64,7 @@ services:
       - albiondata
   mysql:
     image: mariadb:10.5.10
+    restart: on-failure
     environment:
       MARIADB_ROOT_PASSWORD: ${MYSQL_PWD}
     ports:
@@ -74,6 +76,7 @@ services:
       - albiondata
   mysql-backup:
     image: databack/mysql-backup:latest
+    restart: on-failure
     user: "0"
     environment:
       DB_SERVER: mysql
@@ -97,6 +100,7 @@ services:
     - albiondata
   redis:
     image: redis
+    restart: on-failure
     ports:
       - 6379:6379
     volumes:
@@ -135,6 +139,7 @@ services:
       - albiondata
   nginx:
     image: nginx
+    restart: on-failure
     volumes:
       - "$PWD/web:/usr/share/nginx/html:ro"
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
