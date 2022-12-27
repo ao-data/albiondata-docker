@@ -38,6 +38,9 @@ services:
       - redis
     networks: 
       - albiondata
+    logging:
+      options:
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
   deduper:
     image: albiondata/deduper:latest
     restart: on-failure
@@ -47,6 +50,11 @@ services:
       - redis
     networks: 
       - albiondata
+  update-check:
+    image: albiondata/albion-online-update-check:latest
+    environment:
+      ADDITIONAL_MESSAGE_CONTENT: ""
+      DISCORD_WEBHOOK_URL: ""
   nats:
     image: nats
     restart: on-failure
