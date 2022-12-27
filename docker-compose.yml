@@ -60,6 +60,8 @@ services:
     environment:
       ADDITIONAL_MESSAGE_CONTENT: ${ADDITIONAL_MESSAGE_CONTENT}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    volumes:
+      - "./update-check:/usr/src/app/config"
   nats:
     image: nats
     container_name: aodata-nats
