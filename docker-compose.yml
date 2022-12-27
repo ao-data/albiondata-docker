@@ -58,8 +58,8 @@ services:
     image: albiondata/albion-online-update-check:latest
     container_name: aodata-update-check
     environment:
-      ADDITIONAL_MESSAGE_CONTENT: ""
-      DISCORD_WEBHOOK_URL: ""
+      ADDITIONAL_MESSAGE_CONTENT: ${ADDITIONAL_MESSAGE_CONTENT}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
   nats:
     image: nats
     container_name: aodata-nats
