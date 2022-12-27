@@ -2,6 +2,7 @@ version: "3"
 services:
   sql:
     image: albiondata/sql:latest
+    container_name: aodata-sql-client
     restart: on-failure
     command: "-n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
     depends_on: 
@@ -11,6 +12,7 @@ services:
       - albiondata
   api:
     image: albiondata/api:latest
+    container_name: aodata-api
     restart: on-failure
     command: "-s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
     ports:
@@ -21,6 +23,7 @@ services:
       - albiondata
   gate:
     image: albiondata/gate:latest
+    container_name: aodata-gate
     restart: on-failure
     environment:
       ENABLE_NATS: 1
@@ -43,6 +46,7 @@ services:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
   deduper:
     image: albiondata/deduper:latest
+    container_name: aodata-deduper
     restart: on-failure
     command: "-o nats://${NATS_USER}:${NATS_PWD}@nats:4222 -n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -r 'redis:6379' -d"
     depends_on: 
@@ -52,11 +56,13 @@ services:
       - albiondata
   update-check:
     image: albiondata/albion-online-update-check:latest
+    container_name: aodata-update-check
     environment:
       ADDITIONAL_MESSAGE_CONTENT: ""
       DISCORD_WEBHOOK_URL: ""
   nats:
     image: nats
+    container_name: aodata-nats
     restart: on-failure
     environment:
       NATS_USER: ${NATS_USER}
@@ -72,6 +78,7 @@ services:
       - albiondata
   mysql:
     image: mariadb:10.5.10
+    container_name: aodata-mysql
     restart: on-failure
     environment:
       MARIADB_ROOT_PASSWORD: ${MYSQL_PWD}
@@ -84,6 +91,7 @@ services:
       - albiondata
   mysql-backup:
     image: databack/mysql-backup:latest
+    container_name: aodata-gate-mysql-backup
     restart: on-failure
     user: "0"
     environment:
@@ -108,6 +116,7 @@ services:
     - albiondata
   redis:
     image: redis
+    container_name: aodata-redis
     restart: on-failure
     ports:
       - 6379:6379
@@ -118,6 +127,7 @@ services:
       - albiondata
   proxy:
     image: jc21/nginx-proxy-manager:latest
+    container_name: aodata-nginx-proxy-manager
     restart: always
     environment:
       X_FRAME_OPTIONS: "sameorigin"
@@ -132,21 +142,8 @@ services:
     networks: 
       - albiondata
   nginx:
-    image: jc21/nginx-proxy-manager:latest
-    restart: always
-    environment:
-      - X_FRAME_OPTIONS="sameorigin"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "81:81"
-    volumes:
-      - ./nginx_proxy_manager/data:/data
-      - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
-    networks: 
-      - albiondata
-  nginx:
     image: nginx
+    container_name: aodata-website-nginx
     restart: on-failure
     volumes:
       - "$PWD/web:/usr/share/nginx/html:ro"
