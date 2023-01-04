@@ -3,3 +3,5 @@ redisdata/*
 .env
 nginx_proxy_manager/*
 web/*
+ao_database_export/*
+nginx_error_pages/*

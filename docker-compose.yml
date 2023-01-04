@@ -110,7 +110,7 @@ services:
       MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table"
       # DB_DUMP_DEBUG: true
     volumes:
-      - "./web/database:/db"
+      - "./ao_database_export:/db"
       - "./mysql-backup:/scripts.d"
     depends_on: 
       - mysql
@@ -141,6 +141,8 @@ services:
     volumes:
       - ./nginx_proxy_manager/data:/data
       - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
+      - ./nginx_error_pages:/data/nginx/error_pages
+      - ./ao_database_export:/data/nginx/ao_database_export
     networks: 
       - albiondata
   nginx:
