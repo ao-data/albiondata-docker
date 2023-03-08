@@ -156,9 +156,9 @@ services:
     container_name: aodata-website-nginx
     restart: on-failure
     volumes:
-      - "$PWD/web:/usr/share/nginx/html:ro"
-      - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "$PWD/web:/usr/share/nginx/html"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+      - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
     ports:
       - 8080:80        
   web:
