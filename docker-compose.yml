@@ -1,6 +1,7 @@
 version: "3"
 services:
   sql:
+    platform: linux/amd64
     image: albiondata/sql:latest
     container_name: aodata-sql-client
     restart: on-failure
@@ -11,6 +12,7 @@ services:
     networks: 
       - albiondata
   api:
+    platform: linux/amd64
     image: albiondata/api:latest
     container_name: aodata-api
     restart: on-failure
@@ -22,6 +24,7 @@ services:
     networks: 
       - albiondata
   gate:
+    platform: linux/amd64
     image: albiondata/gate:latest
     container_name: aodata-gate
     restart: on-failure
@@ -45,6 +48,7 @@ services:
       options:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
   deduper:
+    platform: linux/amd64
     image: albiondata/deduper:latest
     container_name: aodata-deduper
     restart: on-failure
@@ -55,6 +59,7 @@ services:
     networks: 
       - albiondata
   update-check:
+    platform: linux/amd64
     image: albiondata/albion-online-update-check:latest
     container_name: aodata-update-check
     environment:
@@ -92,6 +97,7 @@ services:
     networks: 
       - albiondata
   mysql-backup:
+    platform: linux/amd64
     image: databack/mysql-backup:latest
     container_name: aodata-gate-mysql-backup
     restart: on-failure
@@ -155,5 +161,58 @@ services:
       - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
     ports:
       - 8080:80        
+  web:
+    platform: linux/amd64
+    image: albiondata/server:latest
+    container_name: aodata-web
+    restart: on-failure
+    environment:
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PWD}
+      DB_NAME: ${MYSQL_DB}
+      MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+      SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
+      SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
+      SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+      SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
+      SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+      RACK_SESSION_SECRET: ${RACK_SESSION_SECRET}
+    volumes:
+      - "./ao_database_export:/db"
+    command: './entrypoint.sh web'
+    ports:
+      - 3000:3000
+    depends_on:
+      - redis
+    networks:
+      - albiondata
+    logging:
+      options:
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+  sidekiq:
+    platform: linux/amd64
+    image: albiondata/server:latest
+    container_name: aodata-sidekiq
+    restart: on-failure
+    environment:
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PWD}
+      DB_NAME: ${MYSQL_DB}
+      MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+      SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
+      SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
+      SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+      SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
+      SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+    volumes:
+      - "./ao_database_export:/db"
+    command: './entrypoint.sh sidekiq'
+    depends_on:
+      - redis
+    networks:
+      - albiondata
+    logging:
+      options:
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
 networks:
   albiondata:
