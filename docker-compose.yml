@@ -1,72 +1,181 @@
 version: "3"
 services:
-  sql:
-    platform: linux/amd64
-    image: albiondata/sql:latest
-    container_name: aodata-sql-client
-    restart: on-failure
-    command: "-n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
-    depends_on: 
-      - mysql
-      - nats
-    networks: 
-      - albiondata
-  api:
-    platform: linux/amd64
-    image: albiondata/api:latest
-    container_name: aodata-api
-    restart: on-failure
-    command: "-s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
-    ports:
-      - 8056:80
-    depends_on: 
-      - mysql
-    networks: 
-      - albiondata
-  gate:
-    platform: linux/amd64
-    image: albiondata/gate:latest
-    container_name: aodata-gate
-    restart: on-failure
-    environment:
-      ENABLE_NATS: 1
-      NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
-      POW_DIFFICULITY: ${POW_DIFFICULITY:-35}
-      POW_PORT: ${POW_PORT:-4223}      
-      POW_EXPIRE_SECONDS: 300
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_DB: ${REDIS_DB:-2}
-    ports:
-      - 4223:4223
-    depends_on: 
-      - nats
-      - redis
-    networks: 
-      - albiondata
-    logging:
-      options:
-        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-  deduper:
-    platform: linux/amd64
-    image: albiondata/deduper:latest
-    container_name: aodata-deduper
-    restart: on-failure
-    command: "-o nats://${NATS_USER}:${NATS_PWD}@nats:4222 -n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -r 'redis:6379' -d"
-    depends_on: 
-      - nats
-      - redis
-    networks: 
-      - albiondata
-  update-check:
-    platform: linux/amd64
-    image: albiondata/albion-online-update-check:latest
-    container_name: aodata-update-check
-    environment:
-      ADDITIONAL_MESSAGE_CONTENT: ${ADDITIONAL_MESSAGE_CONTENT}
-      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
-    volumes:
-      - "./update-check:/usr/src/app/config"
+  # sql:
+  #   platform: linux/amd64
+  #   image: albiondata/sql:latest
+  #   container_name: aodata-sql-client
+  #   restart: on-failure
+  #   command: "-n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
+  #   depends_on:
+  #     - mysql
+  #     - nats
+  #   networks:
+  #     - albiondata
+  # api:
+  #   platform: linux/amd64
+  #   image: albiondata/api:latest
+  #   container_name: aodata-api
+  #   restart: on-failure
+  #   command: "-s 'server=mysql;port=3306;database=${MYSQL_DB};user=${MYSQL_USER};password=${MYSQL_PWD}' -d"
+  #   ports:
+  #     - 8056:80
+  #   depends_on:
+  #     - mysql
+  #   networks:
+  #     - albiondata
+#  gate:
+#    platform: linux/amd64
+#    image: albiondata/gate:latest
+#    container_name: aodata-gate
+#    restart: on-failure
+#    environment:
+#      ENABLE_NATS: 1
+#      NATS_URI: nats://${NATS_USER}:${NATS_PWD}@nats:4222
+#      POW_DIFFICULITY: ${POW_DIFFICULITY:-35}
+#      POW_PORT: ${POW_PORT:-4223}
+#      POW_EXPIRE_SECONDS: 300
+#      REDIS_HOST: ${REDIS_HOST:-redis}
+#      REDIS_PORT: ${REDIS_PORT:-6379}
+#      REDIS_DB: ${REDIS_DB:-2}
+#    ports:
+#      - 4223:4223
+#    depends_on:
+#      - nats
+#      - redis
+#    networks:
+#      - albiondata
+#    logging:
+#      options:
+#        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+  # deduper:
+  #   platform: linux/amd64
+  #   image: albiondata/deduper:latest
+  #   container_name: aodata-deduper
+  #   restart: on-failure
+  #   command: "-o nats://${NATS_USER}:${NATS_PWD}@nats:4222 -n 'nats://${NATS_USER}:${NATS_PWD}@nats:4222' -r 'redis:6379' -d"
+  #   depends_on:
+  #     - nats
+  #     - redis
+  #   networks:
+  #     - albiondata
+  # update-check:
+  #   platform: linux/amd64
+  #   image: albiondata/albion-online-update-check:latest
+  #   container_name: aodata-update-check
+  #   environment:
+  #     ADDITIONAL_MESSAGE_CONTENT: ${ADDITIONAL_MESSAGE_CONTENT}
+  #     DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+  #   volumes:
+  #     - "./update-check:/usr/src/app/config"
+  # mysql-backup:
+  #   platform: linux/amd64
+  #   image: databack/mysql-backup:latest
+  #   container_name: aodata-gate-mysql-backup
+  #   restart: on-failure
+  #   user: "0"
+  #   environment:
+  #     DB_SERVER: mysql
+  #     DB_PORT: 3306
+  #     DB_USER: ${MYSQL_USER}
+  #     DB_PASS: ${MYSQL_PWD}
+  #     DB_NAMES: ${MYSQL_DB}
+  #     DB_DUMP_FREQ: 1440 # Once a day
+  #     DB_DUMP_BEGIN: 0100 # 01:00am
+  #     DB_DUMP_TARGET: /db
+  #     # We are skipping the drops so we don't accidentally kill someone's DB
+  #     # They will need to drop the database/tables manually in order to use the script
+  #     MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table"
+  #     # DB_DUMP_DEBUG: true
+  #   volumes:
+  #     - "./ao_database_export:/db"
+  #     - "./mysql-backup:/scripts.d"
+  #   depends_on:
+  #     - mysql
+  #   networks:
+  #   - albiondata
+  # proxy:
+  #   image: jc21/nginx-proxy-manager:latest
+  #   container_name: aodata-nginx-proxy-manager
+  #   restart: always
+  #   environment:
+  #     X_FRAME_OPTIONS: "sameorigin"
+  #     DB_SQLITE_FILE: "/data/database.sqlite"
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "81:81"
+  #   volumes:
+  #     - ./nginx_proxy_manager/data:/data
+  #     - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
+  #     - ./nginx_error_pages:/data/nginx/error_pages
+  #     - ./ao_database_export:/data/nginx/ao_database_export
+  #   networks:
+  #     - albiondata
+  # nginx:
+  #   image: nginx
+  #   container_name: aodata-website-nginx
+  #   restart: on-failure
+  #   volumes:
+  #     - "$PWD/web:/usr/share/nginx/html"
+  #     - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+  #     - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
+  #   ports:
+  #     - 8080:80
+  # web:
+  #   platform: linux/amd64
+  #   image: albiondata/server:latest
+  #   container_name: aodata-web
+  #   restart: on-failure
+  #   environment:
+  #     DB_USER: ${MYSQL_USER}
+  #     DB_PASS: ${MYSQL_PWD}
+  #     DB_NAME: ${MYSQL_DB}
+  #     MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+  #     SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
+  #     SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
+  #     SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+  #     SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
+  #     SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+  #     RACK_SESSION_SECRET: ${RACK_SESSION_SECRET}
+  #   volumes:
+  #     - "./ao_database_export:/db"
+  #   command: './entrypoint.sh web'
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - albiondata
+  #   logging:
+  #     options:
+  #       tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+  # sidekiq:
+  #   platform: linux/amd64
+  #   image: albiondata/server:latest
+  #   container_name: aodata-sidekiq
+  #   restart: on-failure
+  #   environment:
+  #     DB_USER: ${MYSQL_USER}
+  #     DB_PASS: ${MYSQL_PWD}
+  #     DB_NAME: ${MYSQL_DB}
+  #     MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+  #     SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
+  #     SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
+  #     SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+  #     SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
+  #     SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+  #   volumes:
+  #     - "./ao_database_export:/db"
+  #   command: './entrypoint.sh sidekiq'
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - albiondata
+  #   logging:
+  #     options:
+  #       tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+
+
   nats:
     image: nats
     container_name: aodata-nats
@@ -81,7 +190,7 @@ services:
     volumes:
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf
     command: "-c /etc/nats/nats-server.conf"
-    networks: 
+    networks:
       - albiondata
   mysql:
     image: mariadb:10.5.10
@@ -94,34 +203,8 @@ services:
     volumes:
       - ./mysqldata:/var/lib/mysql
       - ./mysqlconfig/70-server.cnf:/etc/mysql/mariadb.conf.d/70-server.cnf
-    networks: 
+    networks:
       - albiondata
-  mysql-backup:
-    platform: linux/amd64
-    image: databack/mysql-backup:latest
-    container_name: aodata-gate-mysql-backup
-    restart: on-failure
-    user: "0"
-    environment:
-      DB_SERVER: mysql
-      DB_PORT: 3306
-      DB_USER: ${MYSQL_USER}
-      DB_PASS: ${MYSQL_PWD}
-      DB_NAMES: ${MYSQL_DB}
-      DB_DUMP_FREQ: 1440 # Once a day
-      DB_DUMP_BEGIN: 0100 # 01:00am
-      DB_DUMP_TARGET: /db
-      # We are skipping the drops so we don't accidentally kill someone's DB
-      # They will need to drop the database/tables manually in order to use the script
-      MYSQLDUMP_OPTS: "--opt --skip-add-drop-database --skip-add-drop-table"
-      # DB_DUMP_DEBUG: true
-    volumes:
-      - "./ao_database_export:/db"
-      - "./mysql-backup:/scripts.d"
-    depends_on: 
-      - mysql
-    networks: 
-    - albiondata
   redis:
     image: redis
     container_name: aodata-redis
@@ -131,52 +214,39 @@ services:
     volumes:
       - ./redisdata:/data
     command: redis-server --appendonly yes
-    networks: 
+    networks:
       - albiondata
-  proxy:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: aodata-nginx-proxy-manager
-    restart: always
-    environment:
-      X_FRAME_OPTIONS: "sameorigin"
-      DB_SQLITE_FILE: "/data/database.sqlite"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "81:81"
-    volumes:
-      - ./nginx_proxy_manager/data:/data
-      - ./nginx_proxy_manager/letsencrypt:/etc/letsencrypt
-      - ./nginx_error_pages:/data/nginx/error_pages
-      - ./ao_database_export:/data/nginx/ao_database_export
-    networks: 
-      - albiondata
-  nginx:
-    image: nginx
-    container_name: aodata-website-nginx
-    restart: on-failure
-    volumes:
-      - "$PWD/web:/usr/share/nginx/html"
-      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
-      - "./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf"
-    ports:
-      - 8080:80        
   web:
     platform: linux/amd64
-    image: albiondata/server:latest
-    container_name: aodata-web
+    image: albiondata/albiondata-server-rails:latest
+#    build:
+#      context: ../albiondata-server-rails
+    container_name: aodp-server-web
     restart: on-failure
     environment:
-      DB_USER: ${MYSQL_USER}
-      DB_PASS: ${MYSQL_PWD}
-      DB_NAME: ${MYSQL_DB}
+      RAILS_ENV: production
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PWD: ${MYSQL_PWD}
+      MYSQL_DB: ${MYSQL_DB}
       MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+      NATS_HOST: ${NATS_HOST}
+      NATS_PORT: ${NATS_PORT}
+      NATS_USER: ${NATS_USER}
+      NATS_PWD: ${NATS_PWD}
+      NATS_SEND_DISABLE: ${NATS_SEND_DISABLE}
       SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
       SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
       SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+      SIDEKIQ_THREADS: 10
       SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
       SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
-      RACK_SESSION_SECRET: ${RACK_SESSION_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+      ABUSEIPDB_REDIS_URL: ${ABUSEIPDB_REDIS_URL}
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
     volumes:
       - "./ao_database_export:/db"
     command: './entrypoint.sh web'
@@ -191,19 +261,35 @@ services:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
   sidekiq:
     platform: linux/amd64
-    image: albiondata/server:latest
-    container_name: aodata-sidekiq
+    image: albiondata/albiondata-server-rails:latest
+    #    build:
+    #      context: ../albiondata-server-rails
+    container_name: aodp-server-sidekiq
     restart: on-failure
     environment:
-      DB_USER: ${MYSQL_USER}
-      DB_PASS: ${MYSQL_PWD}
-      DB_NAME: ${MYSQL_DB}
+      RAILS_ENV: production
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PWD: ${MYSQL_PWD}
+      MYSQL_DB: ${MYSQL_DB}
       MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+      NATS_HOST: ${NATS_HOST}
+      NATS_PORT: ${NATS_PORT}
+      NATS_USER: ${NATS_USER}
+      NATS_PWD: ${NATS_PWD}
+      NATS_SEND_DISABLE: ${NATS_SEND_DISABLE}
       SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
       SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
       SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+      SIDEKIQ_THREADS: 10
       SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
       SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+      ABUSEIPDB_REDIS_URL: ${ABUSEIPDB_REDIS_URL}
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY}
     volumes:
       - "./ao_database_export:/db"
     command: './entrypoint.sh sidekiq'
@@ -214,5 +300,44 @@ services:
     logging:
       options:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+#  incoming-nats:
+#    platform: linux/amd64
+#    image: albiondata/albiondata-server-rails
+#    container_name: aodp-server-nats
+#    restart: on-failure
+#    environment:
+#      RAILS_ENV: production
+#      MYSQL_HOST: ${MYSQL_HOST}
+#      MYSQL_USER: ${MYSQL_USER}
+#      MYSQL_PWD: ${MYSQL_PWD}
+#      MYSQL_DB: ${MYSQL_DB}
+#      MYSQL_EXPORT_PATH: ${MYSQL_EXPORT_PATH}
+#      NATS_HOST: ${NATS_HOST}
+#      NATS_PORT: ${NATS_PORT}
+#      NATS_USER: ${NATS_USER}
+#      NATS_PWD: ${NATS_PWD}
+#      NATS_SEND_DISABLE: ${NATS_SEND_DISABLE}
+#      SIDEKIQ_REDIS_HOST: ${SIDEKIQ_REDIS_HOST}
+#      SIDEKIQ_REDIS_PORT: ${SIDEKIQ_REDIS_PORT}
+#      SIDEKIQ_REDIS_DB: ${SIDEKIQ_REDIS_DB}
+#      SIDEKIQ_THREADS: 10
+#      SIDEKIQ_WEB_USER: ${SIDEKIQ_WEB_USER}
+#      SIDEKIQ_WEB_PASS: ${SIDEKIQ_WEB_PASS}
+#      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+#      REDIS_HOST: ${REDIS_HOST}
+#      REDIS_PORT: ${REDIS_PORT}
+#      REDIS_DB: ${REDIS_DB}
+#    volumes:
+#      - "./ao_database_export:/db"
+#    command: './entrypoint.sh nats'
+#    depends_on:
+#      - redis
+#    networks:
+#      - albiondata
+#    logging:
+#      options:
+#        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+
+
 networks:
   albiondata:
